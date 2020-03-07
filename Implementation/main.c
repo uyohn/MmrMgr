@@ -24,14 +24,18 @@ int main () {
 	memory = (char*) malloc(100 * sizeof(char));
 	memory_init(memory, 100);
 
+	memory[50] = 100;
+
 	return 0;
 }
 
 
 // FUNCTION IMPLEMENTATIONS //
-// +------+--------------+
-// | size | is populated |
-// +------+--------------+
+
+// MEMORY INIT
+// +------------+--------------+
+// | block size | is populated |
+// +------------+--------------+
 
 void memory_init (void *ptr, unsigned int size) {
 	*(unsigned int*)ptr = size;
