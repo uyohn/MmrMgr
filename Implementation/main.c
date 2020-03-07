@@ -5,7 +5,6 @@
 #define REGION_SIZE 100
 
 // FUNCTION DEFINITIONS //
-
 void memory_alloc (unsigned int size);
 int  memory_free  (void *valid_ptr);
 int  memory_check (void *ptr);
@@ -36,25 +35,27 @@ int main () {
 
 
 // FUNCTION IMPLEMENTATIONS //
-
 // MEMORY INIT
 // +------------+--------------+
 // | block size | is populated |
 // +------------+--------------+
 
 void memory_init (void *ptr, unsigned int size) {
+	int int_size = sizeof(unsigned int);
+
+	// save block length
 	*(unsigned int*)ptr = size;
-	*(char*)((char*)ptr + sizeof(unsigned int)) = 0;
+
+	// save 0 to lock => memory is free to be used
+	*(char*)((char*)ptr + int_size) = 0;
 
 	return;
 }
 
 int* memory_allocate (unsigned int size) {
-
 }
 
 int memory_free (void *valid_ptr) {
-
 }
 
 int memory_check (void *ptr) {
