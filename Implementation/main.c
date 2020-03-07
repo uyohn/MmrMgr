@@ -2,29 +2,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define REGION_SIZE 100
 
 // FUNCTION DEFINITIONS //
 
-void memory_init 	 (void *ptr, unsigned int size);
-int* memory_allocate (unsigned int size);
-int  memory_free 	 (void *valid_ptr);
-int  memory_check 	 (void *ptr);
+void memory_alloc (unsigned int size);
+int  memory_free  (void *valid_ptr);
+int  memory_check (void *ptr);
+void memory_init  (void *ptr, unsigned int size);
 
 
-// START OF MEMORY BLOCK //
-char* memory = NULL;
+// START OF REGION BLOCK //
+char* region = NULL;
 
 
 // MAIN //
-
 int main () {
-	printf("Let's init the memory\n");
-	printf("----------------------------------\n");
+	// first prepare memory region to work with
+	region = (char*) malloc(REGION_SIZE * sizeof(char));
 
-	memory = (char*) malloc(100 * sizeof(char));
-	memory_init(memory, 100);
+	// initialize region
+	printf("Let's initialize the memory\n");
+	printf("---------------------------\n");
 
-	memory[50] = 100;
+	memory_init(region, REGION_SIZE);
+
+
+	// test value to see in debug memory
+	region[50] = 100;
 
 	return 0;
 }
