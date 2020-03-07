@@ -1,5 +1,4 @@
-
-### Informacie
+# Informacie
 
 - max 50 000 block size
 - **best-fit** - lower fragmentation
@@ -9,11 +8,13 @@
 - programovat testy - 4b
 - nemenit mena/parametre funkcii
 - hodnoti sa vhodne komentovanie/struktura
-- 
 
+## Udrziavanie volnej pamate
 
-### Udrziavanie volnej pamate
 1. implicitny zoznam s pouzitim dlzok
-1. explicitny zoznam blokov volnej pamati pomocou ukazovatelov zapisanych priamo vo volnych blokoch
-1. oddelene zoznamy blokov volnej pamati (rozne zoznamy pre triedy blokov volnej pamati podla dlzky)
-1. bloky usporiadane podla velkosti (vyvazeny strom, s ukazovatelom zopisanym v kazdom volnom bloku, dlzka je kluc)
+1. explicitny zoznam blokov volnej pamati pomocou
+ukazovatelov zapisanych priamo vo volnych blokoch
+1. oddelene zoznamy blokov volnej pamati
+(rozne zoznamy pre triedy blokov volnej pamati podla dlzky)
+1. bloky usporiadane podla velkosti
+(vyvazeny strom, s ukazovatelom zopisanym v kazdom volnom bloku, dlzka je kluc)
