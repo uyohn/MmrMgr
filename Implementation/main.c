@@ -1,14 +1,20 @@
-//  INCLUDES //
+// INCLUDES //
 #include <stdio.h>
 #include <stdlib.h>
 
 #define REGION_SIZE 100
 
+
 // FUNCTION DEFINITIONS //
+
+// mandatory:
 void memory_alloc (unsigned int size);
 int  memory_free  (void *valid_ptr);
 int  memory_check (void *ptr);
 void memory_init  (void *ptr, unsigned int size);
+
+// helpers:
+void gen_header (void *ptr, int size, int locked);
 
 
 // START OF REGION BLOCK //
@@ -41,13 +47,8 @@ int main () {
 // +------------+--------------+
 
 void memory_init (void *ptr, unsigned int size) {
-	int int_size = sizeof(unsigned int);
-
-	// save block length
-	*(unsigned int*)ptr = size;
-
-	// save 0 to lock => memory is free to be used
-	*(char*)((char*)ptr + int_size) = 0;
+	// header for whole region, lock = 0 (memory is free)
+	gen_header(ptr, size, 0);
 
 	return;
 }
@@ -59,6 +60,18 @@ int memory_free (void *valid_ptr) {
 }
 
 int memory_check (void *ptr) {
-
 	return 1;
+}
+
+// helpers:
+void gen_header (void *ptr, int size, int locked) {
+	int int_size = sizeof(unsigned int);
+
+	// block length
+	*(unsigned int*)ptr = size;
+
+	// lock
+	*(char*)((char*)ptr + int_size) = locked;
+
+	return;
 }
