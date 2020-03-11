@@ -9,7 +9,7 @@
 // FUNCTION DEFINITIONS //
 
 // mandatory:
-void* memory_alloc (unsigned int size);
+void *memory_alloc (unsigned int size);
 int   memory_free  (void *valid_ptr);
 int   memory_check (void *ptr);
 void  memory_init  (void *ptr, unsigned int size);
@@ -38,8 +38,13 @@ int main ()
 	memory_init(region, REGION_SIZE);
 
 
-	memory_alloc(5);
-	memory_alloc(10);
+	void *first_block = memory_alloc(5);
+	void *second_block = memory_alloc(10);
+
+	memory_free(first_block);
+
+	memory_alloc(2);
+
 	return 0;
 }
 
@@ -91,6 +96,7 @@ void* memory_alloc (unsigned int size)
 
 int memory_free (void *valid_ptr)
 {
+	gen_header(valid_ptr, get_block_size(valid_ptr), 0);
 }
 
 int memory_check (void *ptr)
