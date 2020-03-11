@@ -62,22 +62,26 @@ void memory_init (void *ptr, unsigned int size)
 
 void* memory_alloc (unsigned int size)
 {
-
 	/* // find free space */
 	char* ptr = region;
-
+	
 	while (get_block_lock(ptr)) {
-		ptr += get_block_size(ptr);
-
-		printf("block size: %d\n", get_block_size(ptr));
-		printf("block lock: %d\n", get_block_lock(ptr));
+		if ( memory_check(ptr + get_block_size(ptr)) )
+		{
+			ptr += get_block_size(ptr);
+			
+			printf("block size: %d\n", get_block_size(ptr));
+			printf("block lock: %d\n", get_block_lock(ptr));
+		}
 	}
-
+	
 	// SPLIT IT
 	// header for allocated space
 	gen_header(ptr + size + HEADER_SIZE, get_block_size(ptr) - size, 0);
 	// header for rest
 	gen_header(ptr, size, 1);
+	
+	return ptr;
 }
 
 int memory_free (void *valid_ptr)
@@ -86,7 +90,11 @@ int memory_free (void *valid_ptr)
 
 int memory_check (void *ptr)
 {
-	return 1;
+	if ( (char *)ptr >= (char *)region &&
+		 (char *)ptr <= (char *)(region + *((unsigned int *)region)) )
+		return 1;
+	else
+		return 0;
 }
 
 // helpers:
