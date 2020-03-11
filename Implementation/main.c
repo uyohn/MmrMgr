@@ -15,9 +15,10 @@ int   memory_check (void *ptr);
 void  memory_init  (void *ptr, unsigned int size);
 
 // helpers:
-void 			gen_header 		(void *ptr, int size, int locked);
+void 			gen_header		(void *ptr, int size, int locked);
 unsigned int 	get_block_size 	(void *ptr);
 char 			get_block_lock 	(void *ptr);
+char 			get_header_size ();
 
 
 // START OF REGION BLOCK //
@@ -36,9 +37,6 @@ int main ()
 
 	memory_init(region, REGION_SIZE);
 
-
-	// test value to see in debug memory
-	region[50] = 100;
 
 	memory_alloc(5);
 	memory_alloc(10);
@@ -62,25 +60,32 @@ void memory_init (void *ptr, unsigned int size)
 
 void* memory_alloc (unsigned int size)
 {
-	/* // find free space */
+	printf("memory_alloc:\n");
+
+	// find free space
 	char* ptr = region;
-	
-	while (get_block_lock(ptr)) {
-		if ( memory_check(ptr + get_block_size(ptr)) )
+
+	while (get_block_lock(ptr))
+	{
+		if ( memory_check(ptr + get_block_size(ptr) + HEADER_SIZE) )
 		{
-			ptr += get_block_size(ptr);
+			ptr += get_block_size(ptr) + HEADER_SIZE;
 			
 			printf("block size: %d\n", get_block_size(ptr));
 			printf("block lock: %d\n", get_block_lock(ptr));
 		}
+		else
+		{
+			return NULL;
+		}
 	}
-	
+
 	// SPLIT IT
 	// header for allocated space
 	gen_header(ptr + size + HEADER_SIZE, get_block_size(ptr) - size, 0);
 	// header for rest
 	gen_header(ptr, size, 1);
-	
+
 	return ptr;
 }
 
@@ -90,8 +95,10 @@ int memory_free (void *valid_ptr)
 
 int memory_check (void *ptr)
 {
+	printf("memory_check:\n");
+
 	if ( (char *)ptr >= (char *)region &&
-		 (char *)ptr <= (char *)(region + *((unsigned int *)region)) )
+		 (char *)ptr <  (char *)(region + REGION_SIZE) )
 		return 1;
 	else
 		return 0;
@@ -100,7 +107,8 @@ int memory_check (void *ptr)
 // helpers:
 void gen_header (void *ptr, int size, int locked)
 {
-	int int_size = sizeof(unsigned int);
+	printf("gen_header:\n");
+	int int_size  = sizeof(unsigned int);
 
 	// block length
 	*(unsigned int *)ptr = size;
@@ -120,3 +128,4 @@ char get_block_lock (void *ptr)
 {
 	return *(char*)((char*)ptr + sizeof(unsigned int));
 }
+
