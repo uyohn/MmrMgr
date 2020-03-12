@@ -17,7 +17,7 @@ void  memory_init  (void *ptr, unsigned int size);
 // helpers:
 void			gen_header		(void *ptr, int size, int locked);
 unsigned int 	block_size 	(void *ptr);
-char			get_block_lock 	(void *ptr);
+char			block_locked 	(void *ptr);
 char			get_header_size ();
 int 			can_alloc		(void *ptr, int size);
 char 			*next_block		(void *ptr);
@@ -73,7 +73,7 @@ void* memory_alloc (unsigned int size)
 
 	while (!can_alloc(ptr, size)) // the block is locked or too small
 		// the block is free, but too small, maybe next block is free as well, so join them
-		/* if (!get_block_lock(ptr) && !get_block_lock(ptr + block_size(ptr) + HEADER_SIZE)) */ 
+		/* if (!block_locked(ptr) && !block_locked(ptr + block_size(ptr) + HEADER_SIZE)) */ 
 		/* 	gen_header(ptr, block_size(ptr) + block_size(ptr + block_size(ptr) + HEADER_SIZE), 0); */
 		if ( memory_check( next_block(ptr) ) ) //is the new pointer still in range?
 			ptr = next_block(ptr);
@@ -128,7 +128,7 @@ unsigned int block_size (void *ptr)
 	return *(unsigned int *)ptr;
 }
 
-char get_block_lock (void *ptr)
+char block_locked (void *ptr)
 {
 	return *(char*)((char*)ptr + sizeof(unsigned int));
 }
@@ -137,7 +137,7 @@ char get_block_lock (void *ptr)
 // TODO: join memory blocks here as well?
 int can_alloc (void *ptr, int size)
 {
-	return !get_block_lock(ptr) && block_size(ptr) > size + HEADER_SIZE;
+	return !block_locked(ptr) && block_size(ptr) > size + HEADER_SIZE;
 }
 
 // return pointer to next block
