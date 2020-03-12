@@ -16,7 +16,7 @@ void  memory_init  (void *ptr, unsigned int size);
 
 // helpers:
 void			gen_header		(void *ptr, int size, int locked);
-unsigned int 	get_block_size 	(void *ptr);
+unsigned int 	block_size 	(void *ptr);
 char			get_block_lock 	(void *ptr);
 char			get_header_size ();
 int 			can_alloc		(void *ptr, int size);
@@ -73,18 +73,18 @@ void* memory_alloc (unsigned int size)
 
 	while (!can_alloc(ptr, size)) // the block is locked or too small
 		// the block is free, but too small, maybe next block is free as well, so join them
-		/* if (!get_block_lock(ptr) && !get_block_lock(ptr + get_block_size(ptr) + HEADER_SIZE)) */ 
-		/* 	gen_header(ptr, get_block_size(ptr) + get_block_size(ptr + get_block_size(ptr) + HEADER_SIZE), 0); */
+		/* if (!get_block_lock(ptr) && !get_block_lock(ptr + block_size(ptr) + HEADER_SIZE)) */ 
+		/* 	gen_header(ptr, block_size(ptr) + block_size(ptr + block_size(ptr) + HEADER_SIZE), 0); */
 		if ( memory_check( next_block(ptr) ) ) //is the new pointer still in range?
 			ptr = next_block(ptr);
 		else
 			return NULL;
 
 	// SPLIT IT
-	if ( get_block_size(ptr) >= size + HEADER_SIZE )			 //is there enough space?
+	if ( block_size(ptr) >= size + HEADER_SIZE )			 //is there enough space?
 	{
 		// header for rest
-		gen_header(ptr + HEADER_SIZE + size, get_block_size(ptr) - HEADER_SIZE - size, 0);
+		gen_header(ptr + HEADER_SIZE + size, block_size(ptr) - HEADER_SIZE - size, 0);
 		// header for allocated space
 		gen_header(ptr, size, 1);
 	}
@@ -96,7 +96,7 @@ void* memory_alloc (unsigned int size)
 int memory_free (void *valid_ptr)
 {
 	// TODO - join free blocks together
-	gen_header(valid_ptr, get_block_size(valid_ptr), 0);
+	gen_header(valid_ptr, block_size(valid_ptr), 0);
 	return 1;
 }
 
@@ -123,7 +123,7 @@ void gen_header (void *ptr, int size, int locked)
 	return;
 }
 
-unsigned int get_block_size (void *ptr)
+unsigned int block_size (void *ptr)
 {
 	return *(unsigned int *)ptr;
 }
@@ -137,12 +137,12 @@ char get_block_lock (void *ptr)
 // TODO: join memory blocks here as well?
 int can_alloc (void *ptr, int size)
 {
-	return !get_block_lock(ptr) && get_block_size(ptr) > size + HEADER_SIZE;
+	return !get_block_lock(ptr) && block_size(ptr) > size + HEADER_SIZE;
 }
 
 // return pointer to next block
 // calculated by HEADER_SIZE + size of block we are currently at
 char* next_block (void *ptr)
 {
-	return (ptr + get_block_size(ptr) + HEADER_SIZE);
+	return (ptr + block_size(ptr) + HEADER_SIZE);
 }
