@@ -19,7 +19,7 @@ void			gen_header		(void *ptr, int size, int locked);
 unsigned int 	get_block_size 	(void *ptr);
 char			get_block_lock 	(void *ptr);
 char			get_header_size ();
-int 			cant_alloc		(void *ptr, int size);
+int 			can_alloc		(void *ptr, int size);
 char 			*next_block		(void *ptr);
 
 
@@ -71,7 +71,7 @@ void* memory_alloc (unsigned int size)
 	// find free space
 	char* ptr = region;
 
-	while (cant_alloc(ptr, size)) // the block is locked or too small
+	while (!can_alloc(ptr, size)) // the block is locked or too small
 		// the block is free, but too small, maybe next block is free as well, so join them
 		/* if (!get_block_lock(ptr) && !get_block_lock(ptr + get_block_size(ptr) + HEADER_SIZE)) */ 
 		/* 	gen_header(ptr, get_block_size(ptr) + get_block_size(ptr + get_block_size(ptr) + HEADER_SIZE), 0); */
@@ -133,9 +133,11 @@ char get_block_lock (void *ptr)
 	return *(char*)((char*)ptr + sizeof(unsigned int));
 }
 
-int cant_alloc (void *ptr, int size)
+// return true (1) if the block is unlocked and is big enough
+// TODO: join memory blocks here as well?
+int can_alloc (void *ptr, int size)
 {
-	return get_block_lock(ptr) || get_block_size(ptr) <= size + HEADER_SIZE;
+	return !get_block_lock(ptr) && get_block_size(ptr) > size + HEADER_SIZE;
 }
 
 // return pointer to next block
