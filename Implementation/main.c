@@ -19,8 +19,8 @@ void			gen_header		(void *ptr, int size, int locked);
 unsigned int 	get_block_size 	(void *ptr);
 char			get_block_lock 	(void *ptr);
 char			get_header_size ();
-int 			can_alloc		(void *ptr, int size);
-void 			*next_block		(void *ptr);
+int 			cant_alloc		(void *ptr, int size);
+char 			*next_block		(void *ptr);
 
 
 // START OF REGION BLOCK //
@@ -71,12 +71,12 @@ void* memory_alloc (unsigned int size)
 	// find free space
 	char* ptr = region;
 
-	while ( !can_alloc(ptr, size) ) // the block is locked or too small
+	while (cant_alloc(ptr, size)) // the block is locked or too small
 		// the block is free, but too small, maybe next block is free as well, so join them
 		/* if (!get_block_lock(ptr) && !get_block_lock(ptr + get_block_size(ptr) + HEADER_SIZE)) */ 
 		/* 	gen_header(ptr, get_block_size(ptr) + get_block_size(ptr + get_block_size(ptr) + HEADER_SIZE), 0); */
 		if ( memory_check( next_block(ptr) ) ) //is the new pointer still in range?
-			ptr += get_block_size(ptr) + HEADER_SIZE;
+			ptr = next_block(ptr);
 		else
 			return NULL;
 
@@ -84,11 +84,12 @@ void* memory_alloc (unsigned int size)
 	if ( get_block_size(ptr) >= size + HEADER_SIZE )			 //is there enough space?
 	{
 		// header for rest
-		gen_header(next_block(ptr), get_block_size(ptr) - HEADER_SIZE - size, 0);
+		gen_header(ptr + HEADER_SIZE + size, get_block_size(ptr) - HEADER_SIZE - size, 0);
 		// header for allocated space
 		gen_header(ptr, size, 1);
 	}
 
+	// return pointer to usable memory, not to header of allocated block
 	return ptr + HEADER_SIZE;
 }
 
@@ -132,12 +133,14 @@ char get_block_lock (void *ptr)
 	return *(char*)((char*)ptr + sizeof(unsigned int));
 }
 
-int can_alloc (void *ptr, int size)
+int cant_alloc (void *ptr, int size)
 {
-	return get_block_lock(ptr) == 0 || get_block_size(ptr) >= size + HEADER_SIZE;
+	return get_block_lock(ptr) || get_block_size(ptr) <= size + HEADER_SIZE;
 }
 
-void* next_block (void *ptr)
+// return pointer to next block
+// calculated by HEADER_SIZE + size of block we are currently at
+char* next_block (void *ptr)
 {
-	return (void *)( ptr + HEADER_SIZE + get_block_size(ptr) );
+	return (ptr + get_block_size(ptr) + HEADER_SIZE);
 }
