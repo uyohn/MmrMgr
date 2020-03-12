@@ -34,15 +34,13 @@ int main ()
 	region = (char*) malloc(REGION_SIZE * sizeof(char));
 
 	// initialize region
-	printf("Let's initialize the memory\n");
-	printf("---------------------------\n");
-
 	memory_init(region, REGION_SIZE);
 
 
-	char *first_block = (char *)memory_alloc(10);
-	void *second_block = memory_alloc(10);
-
+	// testing
+	// TODO: move to tester
+	memory_alloc(10);
+	memory_alloc(10);
 	memory_alloc(40);
 	memory_alloc(20);
 
@@ -52,29 +50,27 @@ int main ()
 
 // FUNCTION IMPLEMENTATIONS //
 // MEMORY INIT
-// +------------+--------------+
+// +------------+--------------+---- -   -
 // | block size | is populated |
-// +------------+--------------+
+// +------------+--------------+---- -   -
 
+// initialize region
+// generate header with region size and unlock it
 void memory_init (void *ptr, unsigned int size)
 {
-	// header for whole region, lock = 0 (memory is free)
 	gen_header(ptr, size, 0);
-
 	return;
 }
 
+// try to allocate memory block
+// look for unlocked space
+// if you find enough of it, split it and lock allocated portion
 void* memory_alloc (unsigned int size)
 {
-	printf("alloc memory block with size: %d\n", size);
-
-	// find free space
+	// look for free space
 	char* ptr = region;
 
 	while (!can_alloc(ptr, size)) // the block is locked or too small
-		// the block is free, but too small, maybe next block is free as well, so join them
-		/* if (!block_locked(ptr) && !block_locked(ptr + block_size(ptr) + HEADER_SIZE)) */ 
-		/* 	gen_header(ptr, block_size(ptr) + block_size(ptr + block_size(ptr) + HEADER_SIZE), 0); */
 		if ( memory_check( next_block(ptr) ) ) //is the new pointer still in range?
 			ptr = next_block(ptr);
 		else
@@ -93,6 +89,9 @@ void* memory_alloc (unsigned int size)
 	return ptr + HEADER_SIZE;
 }
 
+// free memory block at pointer
+// implemented by unlocking the block in header
+// join free blocks
 int memory_free (void *valid_ptr)
 {
 	// TODO - join free blocks together
