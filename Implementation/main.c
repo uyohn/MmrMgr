@@ -21,6 +21,7 @@ char			block_locked	(void *ptr);
 int 			can_alloc		(void *ptr, int size);
 char			*next_block 	(void *ptr);
 int 			in_range 		(void *ptr);
+void			join_free_blocks();
 
 
 // START OF REGION BLOCK //
@@ -97,17 +98,8 @@ int memory_free (void *valid_ptr)
 	// unlock this block
 	gen_header(valid_ptr, block_size(valid_ptr), 0);
 
-
-	// join free blocks together
-	char *ptr = region;
-
-	while ( in_range(ptr) )
-	{
-		if ( !block_locked(ptr) && !block_locked(next_block(ptr)))
-			gen_header(ptr, block_size(ptr) + block_size(next_block(ptr)) + HEADER_SIZE, 0);
-
-		ptr = next_block(ptr);
-	}
+	// join consecutive free blocks together
+	join_free_blocks();
 
 	return 0;
 }
@@ -166,4 +158,19 @@ int can_alloc (void *ptr, int size)
 char* next_block (void *ptr)
 {
 	return (ptr + block_size(ptr) + HEADER_SIZE);
+}
+
+// go through whole memory region
+// and join consecutive free blocks 
+void join_free_blocks()
+{
+	char *ptr = region;
+
+	while ( in_range(ptr) )
+	{
+		if ( !block_locked(ptr) && !block_locked(next_block(ptr)))
+			gen_header(ptr, block_size(ptr) + block_size(next_block(ptr)) + HEADER_SIZE, 0);
+
+		ptr = next_block(ptr);
+	}
 }
