@@ -16,11 +16,11 @@ void  memory_init  (void *ptr, unsigned int size);
 
 // helpers:
 void			gen_header		(void *ptr, int size, int locked);
-unsigned int 	block_size 	(void *ptr);
-char			block_locked 	(void *ptr);
-char			get_header_size ();
+unsigned int	block_size		(void *ptr);
+char			block_locked	(void *ptr);
 int 			can_alloc		(void *ptr, int size);
-char 			*next_block		(void *ptr);
+char			*next_block 	(void *ptr);
+int 			in_range 		(void *ptr);
 
 
 // START OF REGION BLOCK //
@@ -70,20 +70,19 @@ void* memory_alloc (unsigned int size)
 	// look for free space
 	char* ptr = region;
 
-	while (!can_alloc(ptr, size)) // the block is locked or too small
-		if ( memory_check( next_block(ptr) ) ) //is the new pointer still in range?
+	while ( !can_alloc(ptr, size) ) // the block is locked or too small
+	{
+		if ( in_range(next_block(ptr)) ) //is the new pointer still in range?
 			ptr = next_block(ptr);
 		else
 			return NULL;
+	}
 
 	// SPLIT IT
-	if ( block_size(ptr) >= size + HEADER_SIZE )			 //is there enough space?
-	{
-		// header for rest
-		gen_header(ptr + HEADER_SIZE + size, block_size(ptr) - HEADER_SIZE - size, 0);
-		// header for allocated space
-		gen_header(ptr, size, 1);
-	}
+	// header for rest
+	gen_header(ptr + HEADER_SIZE + size, block_size(ptr) - HEADER_SIZE - size, 0);
+	// header for allocated space
+	gen_header(ptr, size, 1);
 
 	// return pointer to usable memory, not to header of allocated block
 	return ptr + HEADER_SIZE;
@@ -99,7 +98,16 @@ int memory_free (void *valid_ptr)
 	return 1;
 }
 
+// TODO: add more restrictions
 int memory_check (void *ptr)
+{
+	if (in_range(ptr))
+		return 1;
+
+	return 0;
+}
+
+int in_range (void *ptr)
 {
 	if ( (char *)ptr >= (char *)region &&
 		 (char *)ptr <  (char *)(region + REGION_SIZE) )
@@ -136,7 +144,7 @@ char block_locked (void *ptr)
 // TODO: join memory blocks here as well?
 int can_alloc (void *ptr, int size)
 {
-	return !block_locked(ptr) && block_size(ptr) > size + HEADER_SIZE;
+	return !block_locked(ptr) && block_size(ptr) >= size + HEADER_SIZE;
 }
 
 // return pointer to next block
