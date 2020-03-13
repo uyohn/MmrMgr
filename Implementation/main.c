@@ -72,10 +72,10 @@ void* memory_alloc (unsigned int size)
 
 	while ( !can_alloc(ptr, size) ) // the block is locked or too small
 	{
-		if ( in_range(next_block(ptr)) ) //is the new pointer still in range?
+		if ( in_range(next_block(ptr)) )	// is the new pointer still in range?
 			ptr = next_block(ptr);
 		else
-			return NULL;
+			return NULL;					// didn't find enough free space AND you reached end
 	}
 
 	// SPLIT IT
@@ -84,7 +84,7 @@ void* memory_alloc (unsigned int size)
 	// header for allocated space
 	gen_header(ptr, size, 1);
 
-	// return pointer to usable memory, not to header of allocated block
+	// return pointer to beginning of usable memory
 	return ptr + HEADER_SIZE;
 }
 
