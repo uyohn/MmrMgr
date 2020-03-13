@@ -79,11 +79,17 @@ void* memory_alloc (unsigned int size)
 			return NULL;					// didn't find enough free space AND you reached end
 	}
 
-	// SPLIT IT
-	// header for rest
-	gen_header(ptr + HEADER_SIZE + size, block_size(ptr) - HEADER_SIZE - size, 0);
-	// header for allocated space
-	gen_header(ptr, size, 1);
+													// the free space is at least same size as we want to allocate
+	if ( block_size(ptr) <= size + HEADER_SIZE) // but it's not big enough for it to be worth splitting
+		gen_header(ptr, block_size(ptr), 1);					// just allocate it as it is
+	else
+	{
+		// SPLIT IT
+		// header for rest
+		gen_header(ptr + HEADER_SIZE + size, block_size(ptr) - HEADER_SIZE - size, 0);
+		// header for allocated space
+		gen_header(ptr, size, 1);
+	}
 
 	// return pointer to beginning of usable memory
 	return ptr + HEADER_SIZE;
@@ -162,7 +168,7 @@ char block_locked (void *ptr)
 // TODO: join memory blocks here as well?
 int can_alloc (void *ptr, int size)
 {
-	return !block_locked(ptr) && block_size(ptr) >= size + HEADER_SIZE;
+	return !block_locked(ptr) && block_size(ptr) >= (unsigned int)size;
 }
 
 // return pointer to next block
