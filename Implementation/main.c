@@ -91,11 +91,25 @@ void* memory_alloc (unsigned int size)
 // free memory block at pointer
 // implemented by unlocking the block in header
 // join free blocks
+// TODO: does this function ever fail?
 int memory_free (void *valid_ptr)
 {
-	// TODO - join free blocks together
+	// unlock this block
 	gen_header(valid_ptr, block_size(valid_ptr), 0);
-	return 1;
+
+
+	// join free blocks together
+	char *ptr = region;
+
+	while ( in_range(ptr) )
+	{
+		if ( !block_locked(ptr) && !block_locked(next_block(ptr)))
+			gen_header(ptr, block_size(ptr) + block_size(next_block(ptr)) + HEADER_SIZE, 0);
+
+		ptr = next_block(ptr);
+	}
+
+	return 0;
 }
 
 // TODO: add more restrictions
