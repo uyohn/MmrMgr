@@ -107,8 +107,17 @@ int memory_free (void *valid_ptr)
 // TODO: add more restrictions
 int memory_check (void *ptr)
 {
-	if (in_range(ptr))
-		return 1;
+	// is the pointer even in range?
+	if ( !in_range(ptr) )
+		return 0;
+
+	// was the pointer ever allocated?
+	char *tmp = region;
+	while ( in_range(tmp) )
+		if ( ptr == tmp && block_locked(tmp) )
+			return 1;
+		else
+			tmp = next_block(tmp);
 
 	return 0;
 }
