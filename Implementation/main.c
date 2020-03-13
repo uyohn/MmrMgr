@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #define REGION_SIZE 100
-#define HEADER_SIZE sizeof(int) + sizeof(char)
+#define HEADER_SIZE sizeof(unsigned int) + sizeof(char)
 
 
 // FUNCTION DEFINITIONS //
@@ -107,14 +107,17 @@ int memory_free (void *valid_ptr)
 // TODO: add more restrictions
 int memory_check (void *ptr)
 {
+	// calculate pointer to head
+	char *head = (char *)(ptr - (HEADER_SIZE) );
+
 	// is the pointer even in range?
-	if ( !in_range(ptr) )
+	if ( !in_range(head) )
 		return 0;
 
 	// was the pointer ever allocated?
 	char *tmp = region;
 	while ( in_range(tmp) )
-		if ( ptr == tmp && block_locked(tmp) )
+		if ( head == tmp && block_locked(tmp) )
 			return 1;
 		else
 			tmp = next_block(tmp);
