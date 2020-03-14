@@ -110,7 +110,7 @@ int memory_free (void *valid_ptr)
 	return 0;
 }
 
-// TODO: add more restrictions
+// check if ptr is pointing to valid block
 int memory_check (void *ptr)
 {
 	// calculate pointer to head
@@ -120,7 +120,7 @@ int memory_check (void *ptr)
 	if ( !in_range(head) )
 		return 0;
 
-	// was the pointer ever allocated?
+	// is the pointer allocated?
 	char *tmp = region;
 	while ( in_range(tmp) )
 		if ( head == tmp && block_locked(tmp) )
@@ -128,7 +128,7 @@ int memory_check (void *ptr)
 		else
 			tmp = next_block(tmp);
 
-	return 0;
+	return 1;
 }
 
 int in_range (void *ptr)
