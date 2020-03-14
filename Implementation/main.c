@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define REGION_SIZE 100
-#define HEADER_SIZE sizeof(unsigned int) + sizeof(char)
+#define HEADER_SIZE 3
 
+#define REGION_SIZE 100
 
 // FUNCTION DEFINITIONS //
 
@@ -143,25 +143,25 @@ int in_range (void *ptr)
 // helpers:
 void gen_header (void *ptr, int size, int locked)
 {
-	int int_size  = sizeof(unsigned int);
-
 	// block length
 	*(unsigned int *)ptr = size;
+	// block are at most 50 000 bites long,
+	// so 2 bytes will suffice to store block length
 
 	// lock
-	*(char*)((char*)ptr + int_size) = locked;
+	*(char*)((char*)ptr + 2) = locked;
 
 	return;
 }
 
 unsigned int block_size (void *ptr)
 {
-	return *(unsigned int *)ptr;
+	return *(unsigned int *)ptr & ~(1 << 16);
 }
 
 char block_locked (void *ptr)
 {
-	return *(char*)((char*)ptr + sizeof(unsigned int));
+	return *(char *) ((char *)ptr + 2) & (char)1;
 }
 
 // return true (1) if the block is unlocked and is big enough
