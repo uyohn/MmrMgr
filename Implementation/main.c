@@ -25,15 +25,12 @@ void			join_free_blocks();
 
 
 // START OF REGION BLOCK //
-char* region = NULL;
+char region[REGION_SIZE];
 
 
 // MAIN //
 int main ()
 {
-	// first prepare memory region to work with
-	region = (char*) malloc(REGION_SIZE * sizeof(char));
-
 	// initialize region
 	memory_init(region, REGION_SIZE);
 
@@ -69,7 +66,7 @@ void memory_init (void *ptr, unsigned int size)
 void* memory_alloc (unsigned int size)
 {
 	// look for free space
-	char* ptr = region;
+	char *ptr = region;
 
 	while ( !can_alloc(ptr, size) ) // the block is locked or too small
 	{
@@ -80,15 +77,15 @@ void* memory_alloc (unsigned int size)
 	}
 
 													// the free space is at least same size as we want to allocate
-	if ( block_size(ptr) <= size + HEADER_SIZE) // but it's not big enough for it to be worth splitting
-		gen_header(ptr, block_size(ptr), 1);					// just allocate it as it is
+	if ( block_size(ptr) <= size + HEADER_SIZE) 	// but it's not big enough for it to be worth splitting
+		gen_header(ptr, block_size(ptr), 1);		// just allocate it as it is
 	else
 	{
 		// SPLIT IT
 		// header for rest
-		gen_header(ptr + HEADER_SIZE + size, block_size(ptr) - HEADER_SIZE - size, 0);
+		gen_header(ptr + HEADER_SIZE + size, block_size(ptr) - size, 0);
 		// header for allocated space
-		gen_header(ptr, size, 1);
+		gen_header(ptr, size + HEADER_SIZE, 1);
 	}
 
 	// return pointer to beginning of usable memory
@@ -102,7 +99,7 @@ void* memory_alloc (unsigned int size)
 int memory_free (void *valid_ptr)
 {
 	// unlock this block
-	gen_header(valid_ptr, block_size(valid_ptr), 0);
+	gen_header(valid_ptr, block_size(valid_ptr) + HEADER_SIZE, 0);
 
 	// join consecutive free blocks together
 	join_free_blocks();
@@ -144,7 +141,7 @@ int in_range (void *ptr)
 void gen_header (void *ptr, int size, int locked)
 {
 	// block length
-	*(unsigned int *)ptr = size;
+	*(unsigned int *)ptr = size - HEADER_SIZE;
 	// block are at most 50 000 bites long,
 	// so 2 bytes will suffice to store block length
 
@@ -161,7 +158,7 @@ unsigned int block_size (void *ptr)
 
 char block_locked (void *ptr)
 {
-	return *(char *) ((char *)ptr + 2) & (char)1;
+	return *(char *)((char *)ptr + 2);
 }
 
 // return true (1) if the block is unlocked and is big enough
@@ -187,7 +184,7 @@ void join_free_blocks()
 	while ( in_range(ptr) )
 	{
 		if ( !block_locked(ptr) && !block_locked(next_block(ptr)))
-			gen_header(ptr, block_size(ptr) + block_size(next_block(ptr)) + HEADER_SIZE, 0);
+			gen_header(ptr, block_size(ptr) + HEADER_SIZE + block_size(next_block(ptr)) + HEADER_SIZE, 0);
 
 		ptr = next_block(ptr);
 	}
