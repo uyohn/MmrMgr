@@ -16,9 +16,8 @@
 
 // HEADER SIZE - using bitwise operations to minimalize its size
 #define HEADER_SIZE 3
-
-// REGION SIZE - how big will the memory block be?
-#define REGION_SIZE 100
+// REGION HEADER SIZE - using 1 uint to remember size of region
+#define REGION_HEADER_SIZE sizeof(unsigned int)
 
 // FUNCTION DEFINITIONS //
 
@@ -32,27 +31,25 @@ void  memory_init  (void *ptr, unsigned int size);
 void			gen_header		(void *ptr, int size, int locked);
 unsigned int	block_size		(void *ptr);
 char			block_locked	(void *ptr);
+unsigned int	get_region_size ();
 int 			can_alloc		(void *ptr, int size);
 char			*next_block 	(void *ptr);
 int 			in_range 		(void *ptr);
 void			join_free_blocks();
 
 // tests:
-int 	test();
+int 	test_regular_blocks(int block_size, int region_size);
 
-// START OF REGION BLOCK //
-char region[REGION_SIZE];
+// REGION BLOCK SETUP //
+char *region;
+
 
 
 // MAIN //
 int main ()
 {
-	// initialize region
-	memory_init(region, REGION_SIZE);
-
-
 	// testing
-	test();
+	test_regular_blocks(8, 100);
 
 	return 0;
 }
@@ -68,7 +65,15 @@ int main ()
 // generate header with region size and unlock it
 void memory_init (void *ptr, unsigned int size)
 {
-	gen_header(ptr, size, 0);
+	// remember region size
+	*(unsigned int *)ptr = size - REGION_HEADER_SIZE;
+
+	// generate header for rest of space
+	gen_header(ptr + REGION_HEADER_SIZE, size - REGION_HEADER_SIZE, 0);
+
+	// offset region
+	region += REGION_HEADER_SIZE;
+
 	return;
 }
 
@@ -90,7 +95,7 @@ void* memory_alloc (unsigned int size)
 
 													// the free space is at least same size as we want to allocate
 	if ( block_size(ptr) <= size + HEADER_SIZE) 	// but it's not big enough for it to be worth splitting
-		gen_header(ptr, block_size(ptr), 1);		// just allocate it as it is
+		gen_header(ptr, block_size(ptr) + HEADER_SIZE, 1);		// just allocate it as it is
 	else
 	{
 		// SPLIT IT
@@ -143,7 +148,7 @@ int memory_check (void *ptr)
 int in_range (void *ptr)
 {
 	if ( (char *)ptr >= (char *)region &&
-		 (char *)ptr <  (char *)(region + REGION_SIZE) )
+		 (char *)ptr <  (char *)(region + get_region_size()) )
 		return 1;
 	else
 		return 0;
@@ -166,6 +171,11 @@ void gen_header (void *ptr, int size, int locked)
 unsigned int block_size (void *ptr)
 {
 	return *(unsigned int *)ptr & ~(1 << 16);
+}
+
+unsigned int get_region_size ()
+{
+	return *(unsigned int *)(region - sizeof(unsigned int));
 }
 
 char block_locked (void *ptr)
@@ -195,14 +205,14 @@ void join_free_blocks()
 
 	while ( in_range(ptr) )
 	{
-		if ( !block_locked(ptr) && !block_locked(next_block(ptr)))
+		if ( !block_locked(ptr) && in_range(next_block(ptr)) && !block_locked(next_block(ptr)))
 			gen_header(ptr, block_size(ptr) + HEADER_SIZE + block_size(next_block(ptr)) + HEADER_SIZE, 0);
 
 		ptr = next_block(ptr);
 	}
 }
 
-void print_memory(void *start, int len)
+void print_memory(void *start, unsigned int len)
 {
 	for (int i = 0; i < len; i++)
 	{
@@ -218,14 +228,18 @@ void print_memory(void *start, int len)
 
 
 // tests:
-int test()
+int test_regular_blocks(int block_size, int region_size)
 {
+	// prepare the region
+	region = (char *) malloc(region_size);
+	memory_init(region, region_size);
+
 	memory_alloc(10);
 	memory_alloc(10);
 	memory_alloc(40);
 	memory_alloc(20);
 
-	print_memory(region, REGION_SIZE);
+	print_memory(region, get_region_size());
 
 	return 1;
 }
