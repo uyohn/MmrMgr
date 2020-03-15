@@ -41,7 +41,9 @@ int 			in_range 		(void *ptr);
 void			join_free_blocks();
 
 // tests:
-int 	test_regular_blocks(int block_size, int region_size);
+void	test_regular_blocks  	(int block_size, int region_size);
+void	test_small_irregular_blocks	(int region_size);
+void	test_large_irregular_blocks	(int region_size);
 
 // REGION BLOCK SETUP //
 char *region;
@@ -52,7 +54,20 @@ char *region;
 int main ()
 {
 	// testing
-	test_regular_blocks(8, 100);
+	// small regular blocks
+	test_regular_blocks(15, 50);
+	test_regular_blocks( 8, 100);
+	test_regular_blocks(24, 200);
+
+	// small irregular blocks
+	test_small_irregular_blocks(50);
+	test_small_irregular_blocks(100);
+	test_small_irregular_blocks(200);
+
+	// large irregular blocks
+	test_large_irregular_blocks(1000);
+	test_large_irregular_blocks(10000);
+	test_large_irregular_blocks(100000);
 
 	return 0;
 }
@@ -218,7 +233,7 @@ void join_free_blocks()
 
 void print_memory(void *start, unsigned int len)
 {
-	for (int i = 0; i < len; i++)
+	for (unsigned int i = 0; i <= len; i++)
 	{
 		if ( !(i % 8) ) 
 			printf("\n" ANSI_BLUE "0x%p " ANSI_RESET "<" ANSI_YELLOW "region+" ANSI_YELLOW_BOLD "%02d" ANSI_RESET">", start, i);
@@ -232,9 +247,9 @@ void print_memory(void *start, unsigned int len)
 
 
 // tests:
-int test_regular_blocks(int block_size, int region_size)
+void test_regular_blocks(int block_size, int region_size)
 {
-	printf(ANSI_RED_BOLD "\nRUNNING TEST" ANSI_RESET);
+	printf(ANSI_RED_BOLD "\nRUNNING TEST" ANSI_RESET " / regular blocks\n");
 
 	// prepare the region
 	region = (char *) malloc(region_size);
@@ -261,11 +276,92 @@ int test_regular_blocks(int block_size, int region_size)
 	print_memory(region, get_region_size());
 
 	// print test results
-	printf(ANSI_RED_BOLD "\nTEST RESULTS" ANSI_RESET);
+	printf(ANSI_RED_BOLD "\nTEST RESULTS\n" ANSI_RESET);
 	printf("\nIdeal result:\t" ANSI_YELLOW "%d\n" ANSI_RESET, region_size / block_size);
 	printf("Actual result:\t" ANSI_YELLOW "%d\n" ANSI_RESET, successfull_allocs);
 	printf(ANSI_BLUE "\nEffectivity:\t" ANSI_BLUE_BOLD "%02.0lf\%\n\n" ANSI_RESET, 100 * (double)successfull_allocs / ((double)region_size / (double)block_size) );
 
 	printf(ANSI_RED_BOLD "\nEND TEST\n" ANSI_RESET);
-	return 1;
+	return;
+}
+
+void test_small_irregular_blocks(int region_size)
+{
+	printf(ANSI_RED_BOLD "\nRUNNING TEST" ANSI_RESET " / small irregular blocks\n");
+
+	int blocks_size[10] = {8, 16, 9, 24, 10, 13, 18, 11, 20, 22};
+
+	// prepare the region
+	region = (char *) malloc(region_size);
+	memory_init(region, region_size);
+
+	// print some info
+	printf("\nRegion size:\t" ANSI_YELLOW "%d\n" ANSI_RESET, region_size);
+	printf("Usable size:\t" ANSI_YELLOW "%d\n" ANSI_RESET, get_region_size());
+	printf("Block size:\t" ANSI_YELLOW "small irregular\n" ANSI_RESET);
+
+	// var for percentage calculation
+	int successfull_allocated_space = 0;
+
+	// alloc as many blocks as will fit in the region
+	char *last_block = NULL;
+	int i;
+	for (i = 0; (last_block = memory_alloc(blocks_size[i % 10])) != NULL; i++)
+	{
+		successfull_allocated_space += blocks_size[i % 10];
+		memset(last_block, '#', block_size(last_block));
+	}
+
+	// print memory table
+	printf(ANSI_RED_BOLD "\nREGION HEXDUMP" ANSI_RESET);
+	print_memory(region, get_region_size());
+
+	// print test results
+	printf(ANSI_RED_BOLD "\nTEST RESULTS\n" ANSI_RESET);
+	printf("Successfull allocs:\t" ANSI_YELLOW "%d\n" ANSI_RESET, i);
+	printf(ANSI_BLUE "\nEffectivity:\t" ANSI_BLUE_BOLD "%02.0lf\%\n\n" ANSI_RESET, 100 * (double)successfull_allocated_space / (double)region_size );
+
+	printf(ANSI_RED_BOLD "\nEND TEST\n" ANSI_RESET);
+	return;
+}
+
+void test_large_irregular_blocks(int region_size)
+{
+	printf(ANSI_RED_BOLD "\nRUNNING TEST" ANSI_RESET " / large irregular blocks\n");
+
+	int blocks_size[10] = {500, 825, 640, 5000, 3875, 789, 1598, 2155, 3128, 598};
+
+	// prepare the region
+	region = (char *) malloc(region_size);
+	memory_init(region, region_size);
+
+	// print some info
+	printf("\nRegion size:\t" ANSI_YELLOW "%d\n" ANSI_RESET, region_size);
+	printf("Usable size:\t" ANSI_YELLOW "%d\n" ANSI_RESET, get_region_size());
+	printf("Block size:\t" ANSI_YELLOW "large irregular\n" ANSI_RESET);
+
+	// var for percentage calculation
+	int successfull_allocated_space = 0;
+
+	// alloc as many blocks as will fit in the region
+	char *last_block = NULL;
+	int i;
+	for (i = 0; (last_block = memory_alloc(blocks_size[i % 10])) != NULL; i++)
+	{
+		successfull_allocated_space += blocks_size[i % 10];
+		memset(last_block, '#', block_size(last_block));
+	}
+
+	// print memory table
+	/* printf(ANSI_RED_BOLD "\nREGION HEXDUMP" ANSI_RESET); */
+	/* print_memory(region, get_region_size()); */
+
+	// print test results
+	printf(ANSI_RED_BOLD "\nTEST RESULTS\n" ANSI_RESET);
+	printf("Successfull allocs:\t" ANSI_YELLOW "%d\n" ANSI_RESET, i);
+	printf("Allocated space:\t" ANSI_YELLOW "%d\n" ANSI_RESET, successfull_allocated_space);
+	printf(ANSI_BLUE "\nEffectivity:\t" ANSI_BLUE_BOLD "%02.0lf\%\n\n" ANSI_RESET, 100 * (double)successfull_allocated_space / (double)region_size );
+
+	printf(ANSI_RED_BOLD "\nEND TEST\n" ANSI_RESET);
+	return;
 }
