@@ -1,6 +1,7 @@
 // INCLUDES //
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // COLORFUL OUTPUT
 #define ANSI_RED 			"\x1b[31m"
@@ -170,7 +171,8 @@ void gen_header (void *ptr, int size, int locked)
 
 unsigned int block_size (void *ptr)
 {
-	return *(unsigned int *)ptr & ~(1 << 16);
+	/* return *(unsigned int *)ptr & ~(1 << 16); */
+	return *(unsigned int *)ptr & 8454143;
 }
 
 unsigned int get_region_size ()
@@ -234,10 +236,13 @@ int test_regular_blocks(int block_size, int region_size)
 	region = (char *) malloc(region_size);
 	memory_init(region, region_size);
 
-	memory_alloc(10);
-	memory_alloc(10);
-	memory_alloc(40);
-	memory_alloc(20);
+
+	// alloc as many blocks as will fit in the region
+	char *last_block = NULL;
+	while ( (last_block = memory_alloc(block_size)) != NULL )
+	{
+		memset(last_block, '#', block_size);
+	}
 
 	print_memory(region, get_region_size());
 
