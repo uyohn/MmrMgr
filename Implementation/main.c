@@ -5,10 +5,12 @@
 
 // COLORFUL OUTPUT
 #define ANSI_RED 			"\x1b[31m"
+#define ANSI_RED_BOLD		"\x1b[31;1m"
 #define ANSI_GREEN			"\x1b[32m"
 #define ANSI_YELLOW			"\x1b[33m"
 #define ANSI_YELLOW_BOLD	"\x1b[33;1m"
 #define ANSI_BLUE			"\x1b[34m"
+#define ANSI_BLUE_BOLD		"\x1b[34;1m"
 #define ANSI_MAGENTA		"\x1b[35m"
 #define ANSI_CYAN			"\x1b[36m"
 #define ANSI_GREY_FAINT		"\x1b[37;2m"
@@ -232,19 +234,38 @@ void print_memory(void *start, unsigned int len)
 // tests:
 int test_regular_blocks(int block_size, int region_size)
 {
+	printf(ANSI_RED_BOLD "\nRUNNING TEST" ANSI_RESET);
+
 	// prepare the region
 	region = (char *) malloc(region_size);
 	memory_init(region, region_size);
 
+	// print some info
+	printf("\nRegion size:\t" ANSI_YELLOW "%d\n" ANSI_RESET, region_size);
+	printf("Usable size:\t" ANSI_YELLOW "%d\n" ANSI_RESET, get_region_size());
+	printf("Block size:\t" ANSI_YELLOW "%d\n" ANSI_RESET, block_size);
+
+	// var for percentage calculation
+	int successfull_allocs = 0;
 
 	// alloc as many blocks as will fit in the region
 	char *last_block = NULL;
 	while ( (last_block = memory_alloc(block_size)) != NULL )
 	{
+		successfull_allocs++;
 		memset(last_block, '#', block_size);
 	}
 
+	// print memory table
+	printf(ANSI_RED_BOLD "\nREGION HEXDUMP" ANSI_RESET);
 	print_memory(region, get_region_size());
 
+	// print test results
+	printf(ANSI_RED_BOLD "\nTEST RESULTS" ANSI_RESET);
+	printf("\nIdeal result:\t" ANSI_YELLOW "%d\n" ANSI_RESET, region_size / block_size);
+	printf("Actual result:\t" ANSI_YELLOW "%d\n" ANSI_RESET, successfull_allocs);
+	printf(ANSI_BLUE "\nEffectivity:\t" ANSI_BLUE_BOLD "%02.0lf\%\n\n" ANSI_RESET, 100 * (double)successfull_allocs / ((double)region_size / (double)block_size) );
+
+	printf(ANSI_RED_BOLD "\nEND TEST\n" ANSI_RESET);
 	return 1;
 }
