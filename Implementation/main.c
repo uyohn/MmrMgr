@@ -207,9 +207,9 @@ void print_memory(void *start, int len)
 	for (int i = 0; i < len; i++)
 	{
 		if ( !(i % 8) ) 
-			printf("\n" ANSI_BLUE "0x%p " ANSI_RESET "<" ANSI_YELLOW "start+" ANSI_YELLOW_BOLD "%02d" ANSI_RESET">", start, i);
+			printf("\n" ANSI_BLUE "0x%p " ANSI_RESET "<" ANSI_YELLOW "region+" ANSI_YELLOW_BOLD "%02d" ANSI_RESET">", start, i);
 
-		printf(ANSI_GREY_FAINT "  0x" ANSI_RESET ANSI_WHITE_BOLD "%02x " ANSI_RESET, *(char *)(start + i));
+		printf(ANSI_GREY_FAINT " 0x" ANSI_RESET ANSI_WHITE_BOLD "%02x " ANSI_RESET, *(char *)(start + i));
 
 	}
 
