@@ -134,7 +134,7 @@ void* memory_alloc (unsigned int size)
 int memory_free (void *valid_ptr)
 {
 	// unlock this block
-	gen_header(valid_ptr, block_size(valid_ptr) + HEADER_SIZE, 0);
+	gen_header(valid_ptr - HEADER_SIZE, block_size(valid_ptr - HEADER_SIZE) + HEADER_SIZE, 0);
 
 	// join consecutive free blocks together
 	join_free_blocks();
