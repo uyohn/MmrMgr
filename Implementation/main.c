@@ -2,8 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// COLORFUL OUTPUT
+#define ANSI_RED 			"\x1b[31m"
+#define ANSI_GREEN			"\x1b[32m"
+#define ANSI_YELLOW			"\x1b[33m"
+#define ANSI_YELLOW_BOLD	"\x1b[33;1m"
+#define ANSI_BLUE			"\x1b[34m"
+#define ANSI_MAGENTA		"\x1b[35m"
+#define ANSI_CYAN			"\x1b[36m"
+#define ANSI_GREY_FAINT		"\x1b[37;2m"
+#define ANSI_WHITE_BOLD 	"\x1b[37;1m"
+#define ANSI_RESET			"\x1b[0m"
+
+// HEADER SIZE - using bitwise operations to minimalize its size
 #define HEADER_SIZE 3
 
+// REGION SIZE - how big will the memory block be?
 #define REGION_SIZE 100
 
 // FUNCTION DEFINITIONS //
@@ -23,6 +37,8 @@ char			*next_block 	(void *ptr);
 int 			in_range 		(void *ptr);
 void			join_free_blocks();
 
+// tests:
+int 	test();
 
 // START OF REGION BLOCK //
 char region[REGION_SIZE];
@@ -36,11 +52,7 @@ int main ()
 
 
 	// testing
-	// TODO: move to tester
-	memory_alloc(10);
-	memory_alloc(10);
-	memory_alloc(40);
-	memory_alloc(20);
+	test();
 
 	return 0;
 }
@@ -188,4 +200,32 @@ void join_free_blocks()
 
 		ptr = next_block(ptr);
 	}
+}
+
+void print_memory(void *start, int len)
+{
+	for (int i = 0; i < len; i++)
+	{
+		if ( !(i % 8) ) 
+			printf("\n" ANSI_BLUE "0x%p " ANSI_RESET "<" ANSI_YELLOW "start+" ANSI_YELLOW_BOLD "%02d" ANSI_RESET">", start, i);
+
+		printf(ANSI_GREY_FAINT "  0x" ANSI_RESET ANSI_WHITE_BOLD "%02x " ANSI_RESET, *(char *)(start + i));
+
+	}
+
+	printf("\n\n");
+}
+
+
+// tests:
+int test()
+{
+	memory_alloc(10);
+	memory_alloc(10);
+	memory_alloc(40);
+	memory_alloc(20);
+
+	print_memory(region, REGION_SIZE);
+
+	return 1;
 }
